@@ -1,0 +1,7 @@
+MONTH_EN \b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b
+MONTH_DE \b(?:Jan(?:uar)?|Feb(?:ruar)?|M(ä|ae)r(?:z)?|Apr(?:il)?|Mai|Jun(?:i)?|Jul(?:i)?|Aug(?:ust)?|Sep(?:tember)?|Okt(?:ober)?|Nov(?:ember)?|Dez(?:ember)?)\b
+MONTH (?:%{MONTH_EN}|%{MONTH_DE})
+#SYSLOGBASE %{SYSLOGTIMESTAMP:timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}:
+SYSLOGBASE_ISOTIMESTAMP %{TIMESTAMP_ISO8601:timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}:
+ASTARO_TIMESTAMP %{YEAR}: %{MONTHNUM}:%{MONTHDAY}-%{TIME}
+NOTPIPE [^|]+

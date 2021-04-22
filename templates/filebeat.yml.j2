@@ -1,0 +1,9 @@
+
+
+
+output.elasticsearch:
+  hosts: ["{{ logstash_filebeat_es_url }}"]
+  username: "{{ logstash_filebeat_es_user }}"
+  password: "{{ logstash_filebeat_es_pwd }}"
+setup.kibana:
+  host: "{{ logstash_filebeat_kibana_url }}"

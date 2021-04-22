@@ -1,0 +1,20 @@
+
+- name: restart logstash
+  service: name=logstash state=restarted
+
+- name: reload logstash
+  service: name=logstash state=restarted
+  when: logstash_auto_reload == false
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+
+- name: reload ldconfig
+  shell: ldconfig -v > /dev/null
+  ignore_errors: yes
+
+- name: restart rabbitmq
+  service: name=rabbitmq state=restarted
+
+- name: reload firewalld
+  systemd: name=firewalld state=reloaded

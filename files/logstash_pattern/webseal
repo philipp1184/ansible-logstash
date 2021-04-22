@@ -1,0 +1,2 @@
+WEBSEALREQUEST %{IP:ip} - %{NOTSPACE:username} \[%{HTTPDATE:timestamp}\] "%{WORD:httpmethod} %{NOTSPACE:httppath} HTTP/%{NUMBER:httpversion}" %{NUMBER:response} %{NUMBER:bytes}
+WEBSEAL_RSYSLOG (?m)<%{POSINT:syslog_pri}>%{INT} %{NOTSPACE} %{NOTSPACE} %{HOSTNAME:host} %{NOTSPACE:instancename} %{INT} - - %{GREEDYDATA:xml}

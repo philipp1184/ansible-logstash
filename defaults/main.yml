@@ -1,0 +1,46 @@
+# shipper or indexer
+logstash_role: "shipper"
+
+logstash_force_reinstall: false
+
+logstash_auto_reload: true
+
+logstash_output_es_user: "logstash_writer"
+logstash_output_es_pwd: "secret"
+logstash_output_es_url: "http://{{ ansible_default_ipv4.address }}:9200"
+
+
+logstash_metricbeat_es_user: "elastic"
+logstash_metricbeat_es_pwd: "secret"
+logstash_metricbeat_es_url: "http://{{ ansible_default_ipv4.address }}:9200"
+logstash_metricbeat_kibana_url: "http://localhost:5601"
+
+logstash_filebeat_es_user: "elastic"
+logstash_filebeat_es_pwd: "secret"
+logstash_filebeat_es_url: "http://{{ ansible_default_ipv4.address }}:9200"
+logstash_filebeat_kibana_url: "http://localhost:5601"
+
+logstash_xpack_monitor_user: "logstash_system"
+logstash_xpack_monitor_pwd: "secret"
+logstash_xpack_monitor_url: "http://{{ ansible_default_ipv4.address }}:9200"
+
+logstash_pipeline_config_path: "library/pipelines.d/*"
+
+logstash_pipelines:
+  intake:
+    id: intake
+    path: "/etc/logstash/conf.d/pipelines/intake.conf"
+    workers: 1
+    queuetype: "persisted"
+
+logstash_rabbitmq_user: "logstash"
+logstash_rabbitmq_pwd: "s3c3t"
+
+logstash_plugins:
+  - logstash-codec-sflow
+  - logstash-codec-netflow
+  - logstash-input-udp
+  - logstash-input-tcp
+  - logstash-filter-dns
+  - logstash-filter-geoip
+  - logstash-filter-translate

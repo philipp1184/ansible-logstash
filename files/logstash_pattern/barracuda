@@ -1,0 +1,6 @@
+BARRACUDA_SERVICE (RECV|SEND|SCAN)
+BARRACUDA_RECV %{BARRACUDA_SERVICE:service} %{NOTSPACE:sender} %{NOTSPACE:recipient} %{INT:action} %{INT:reason} %{GREEDYDATA:reason_extra}
+BARRACUDA_SEND %{BARRACUDA_SERVICE:service} (?:%{WORD:encrypted}|-) %{INT:action} %{NOTSPACE:queue_id} %{GREEDYDATA:response}
+BARRACUDA_SCAN %{BARRACUDA_SERVICE:service} (?:%{WORD:encrypted}|-) %{NOTSPACE:sender} %{NOTSPACE:recipient} (?:%{NUMBER:score}|-) %{INT:action} %{INT:reason} (?:%{GREEDYDATA:reason_extra}|-)\sSZ:%{INT:bytes}\sSUBJ:%{GREEDYDATA:subject}
+# SYSLOGBARRACUDA %{TIMESTAMP_ISO8601} %{SYSLOGHOST:logsource} %{SYSLOGPROG}: %{HOSTNAME}(\[%{IP:client_ip}\])? %{NOTSPACE:messageid} %{NUMBER:starttime} %{NUMBER:endtime} (%{BARRACUDA_RECV}|%{BARRACUDA_SEND}|%{BARRACUDA_SCAN})
+SYSLOGBARRACUDA (%{IP}|%{HOSTNAME})?(\[%{IP:client_ip}\])? %{NOTSPACE:messageid} %{NUMBER:starttime} %{NUMBER:endtime} (%{BARRACUDA_RECV}|%{BARRACUDA_SEND}|%{BARRACUDA_SCAN})

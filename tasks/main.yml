@@ -1,0 +1,152 @@
+- name: Install java-1.8.0-openjdk
+  yum: name=java-1.8.0-openjdk state=installed
+
+- name: Force Prepare Reinstall/Upgrade Logstash
+  yum: name=logstash state=absent
+  when: logstash_force_reinstall
+  tags:
+    - logstash-install
+
+- name: copy Logstash Yum Repo File
+  copy: src=logstash.repo dest=/etc/yum.repos.d/logstash.repo
+  tags: es-install
+
+- name: Install Logstash
+  yum: name=logstash state=latest
+  notify:
+    - restart logstash
+  tags:
+    - logstash-install
+
+
+
+- name: Generate Logstash Config File
+  template: src=logstash.yml.j2 dest=/etc/logstash/logstash.yml owner=logstash group=logstash mode=0644
+  notify:
+    - restart logstash
+  tags:
+    - config
+    - logstash-config
+
+- name: Generate Logstash Pipeline Config File
+  template: src=pipeline.yml.j2 dest=/etc/logstash/pipelines.yml owner=logstash group=logstash mode=0644
+  tags:
+    - config
+    - logstash-config
+    - logstash-pipeline
+    - testcopy
+
+
+- name: Create Logstash Pipeline Config Directory
+  tags: logstash-pipeline
+  file: path=/etc/logstash/conf.d/pipelines state=directory owner=logstash group=logstash mode=0777
+
+- name: Create Logstash Pipeline Config Directories
+  file:
+    path: /etc/logstash/conf.d/{{ item.path }}
+    state: directory
+    mode: '{{ item.mode }}'
+    owner: "logstash"
+    group: "logstash"
+  with_filetree: "{{ logstash_pipeline_config_path }}"
+  when: item.state == 'directory'
+  tags:
+    - logstash-config
+
+- name: Generate Logstash Pipeline Config Files (Template)
+  template:
+    src: '{{ item.src }}'
+    dest: /etc/logstash/conf.d/{{ item.path | regex_replace('\.j2$', '') }}
+    mode: '{{ item.mode }}'
+    owner: "logstash"
+    group: "logstash"
+  with_filetree: "{{ logstash_pipeline_config_path }}"
+  when:
+    - item.state == 'file'
+    - item.src is match(".*\.j2")
+  tags:
+    - logstash-config
+    - logstash-pipeline-config
+
+- name: Generate Logstash Pipeline Config Files
+  copy:
+    src: '{{ item.src }}'
+    dest: /etc/logstash/conf.d/{{ item.path }}
+    mode: '{{ item.mode }}'
+    owner: "logstash"
+    group: "logstash"
+  with_filetree: "{{ logstash_pipeline_config_path }}"
+  when:
+    - item.state == 'file'
+    - not item.src is match(".*\.j2")
+  tags:
+    - logstash-config
+    - test-j2
+
+
+- name: Get Logstash Java Executable
+  stat: path="/usr/share/logstash/jdk/bin/java"
+  register: sym
+  tags: java
+
+- name: Get JLI Lib Path for Current Java
+  find: paths={{ sym.stat.path | dirname ~ "/../" }} patterns="libjli.so" recurse=yes
+  register: js
+  tags: java
+
+- name: Set LD Conf for jli Libs
+  lineinfile:
+    path: /etc/ld.so.conf.d/java_amd64_jli.conf
+    insertbefore: BOF
+    line: "{{ js.files[0].path | dirname }}"
+    state: present
+    create: yes
+  notify: reload ldconfig
+  tags: java
+
+- name: Engage Java to start privileged Services
+  shell: setcap cap_net_bind_service=+epi {{ sym.stat.path }}
+  tags: java
+
+- name: Create Logstash Pattern Directory
+  file: path=/etc/logstash/conf.d/pattern state=directory
+
+- name: Create dead letter queue Path
+  tags: logstash-config
+  file: path=/tmp/dead_letter_queue state=directory owner=logstash group=logstash mode=0777
+
+- name: Check if logstash service is enabled (workaround)
+  shell: systemctl is-enabled logstash
+  register: isenabled_result
+  tags: enable_logstash
+  ignore_errors: yes
+
+- name: Enable Logstash Service
+  # service: name=logstash enabled=yes
+  shell: systemctl enable logstash
+  when: ("disabled" in isenabled_result.stdout_lines)
+  tags: enable_logstash
+
+- name: Start Logstash Server
+  service: name=logstash state=started
+
+
+- name: "Clean Up Cron Job für DLQ"
+  tags: "cron"
+  ansible.builtin.cron:
+    name: "logstash clean up DLQ"
+    minute: "0"
+    hour: "6,10,14,18,22"
+    job: "find /tmp/dead_letter_queue/*/*.log -type f -atime -1 -delete 2> /dev/null"
+
+
+#- name: "Install Logstash Plugins"
+#  tags: logstash-plugins
+#  shell: /usr/share/logstash/bin/logstash-plugin install {{ item }}
+#  with_items: "{{ logstash_plugins }}"
+
+
+#- name: "Install Logstash Plugins"
+#  tags: logstash-plugins
+#  shell: /usr/share/logstash/bin/logstash-plugin update {{ item }}
+#  with_items: "{{ logstash_plugins }}"

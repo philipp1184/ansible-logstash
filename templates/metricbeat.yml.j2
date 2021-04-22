@@ -1,0 +1,27 @@
+#==========================  Modules configuration ============================
+
+metricbeat.config.modules:
+  # Glob pattern for configuration loading
+  path: ${path.config}/modules.d/*.yml
+
+  # Set to true to enable config reloading
+  reload.enabled: false
+
+  # Period on which files under path should be checked for changes
+  #reload.period: 10s
+
+#==================== Elasticsearch template setting ==========================
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+  #_source.enabled: false
+
+
+
+output.elasticsearch:
+  hosts: ["{{ logstash_metricbeat_es_url }}"]
+  username: "{{ logstash_metricbeat_es_user }}"
+  password: "{{ logstash_metricbeat_es_pwd }}"
+setup.kibana:
+  host: "{{ logstash_metricbeat_kibana_url }}"
