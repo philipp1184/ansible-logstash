@@ -1,3 +1,9 @@
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+
+
 - name: Install java-1.8.0-openjdk
   yum: name=java-1.8.0-openjdk state=installed
 
@@ -138,6 +144,9 @@
     minute: "0"
     hour: "6,10,14,18,22"
     job: "find /tmp/dead_letter_queue/*/*.log -type f -atime -1 -delete 2> /dev/null"
+
+- include: filebeat.yml
+  when: "'filebeat' in ansible_facts.packages"
 
 
 #- name: "Install Logstash Plugins"

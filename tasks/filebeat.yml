@@ -1,0 +1,15 @@
+- name: Check if Filebeat LS Module is enabled
+  stat:
+    path: /etc/filebeat/modules.d/logstash.yml
+  register: stat_result
+
+- name: Enable LS Module for Filebeat
+  tags: filebeat-install
+  shell: filebeat modules enable logstash
+  when: stat_result.stat.exists == False
+
+- name: Create ES Filebeat Config File
+  tags: filebeat-install
+  template: src=filebeat_logstash.yml dest=/etc/filebeat/modules.d/logstash.yml
+  notify:
+    - restart filebeat
